@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 using NAudio.CoreAudioApi;
 
 namespace AudioToggleTray;
@@ -17,8 +18,53 @@ internal static class Program
     }
 }
 
+public class HotkeyWindow : NativeWindow, IDisposable
+{
+    private const int WM_HOTKEY = 0x0312;
+
+    public event EventHandler? HotkeyPressed;
+
+    public HotkeyWindow()
+    {
+        CreateHandle(new CreateParams());
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == WM_HOTKEY)
+        {
+            HotkeyPressed?.Invoke(this, EventArgs.Empty);
+        }
+
+        base.WndProc(ref m);
+    }
+
+    public void Dispose()
+    {
+        DestroyHandle();
+    }
+}
+
 public class TrayAppContext : ApplicationContext
 {
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(
+        IntPtr hWnd,
+        int id,
+        uint fsModifiers,
+        uint vk);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(
+        IntPtr hWnd,
+        int id);
+
+    private const uint MOD_CONTROL = 0x0002;
+
+    private const int HOTKEY_ID = 1;
+
+    private HotkeyWindow? _hotkeyWindow;
+
     private readonly NotifyIcon _trayIcon;
 
     private readonly MMDeviceEnumerator _enumerator = new();
@@ -44,6 +90,19 @@ public class TrayAppContext : ApplicationContext
         };
 
         _trayIcon.MouseClick += TrayIcon_MouseClick;
+
+        _hotkeyWindow = new HotkeyWindow();
+
+        _hotkeyWindow.HotkeyPressed += async (_, _) =>
+        {
+            ToggleDevice();
+        };
+
+        RegisterHotKey(
+            _hotkeyWindow.Handle,
+            HOTKEY_ID,
+            MOD_CONTROL,
+            (uint)Keys.F12);
 
         UpdateUI();
     }
@@ -139,6 +198,12 @@ public class TrayAppContext : ApplicationContext
 
         _speakerIcon.Dispose();
         _headphoneIcon.Dispose();
+
+        if (_hotkeyWindow != null)
+        {
+            UnregisterHotKey(_hotkeyWindow.Handle, HOTKEY_ID);
+            _hotkeyWindow.Dispose();
+        }
 
         base.ExitThreadCore();
     }
