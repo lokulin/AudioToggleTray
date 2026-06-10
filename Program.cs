@@ -3,7 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using AudioSwitcher.AudioApi.CoreAudio;
+using NAudio.CoreAudioApi;
 
 namespace AudioToggleTray;
 
@@ -20,18 +20,17 @@ internal static class Program
 public class TrayAppContext : ApplicationContext
 {
     private readonly NotifyIcon _trayIcon;
-    private readonly CoreAudioController _audio;
 
-    private CoreAudioDevice? _speakers;
-    private CoreAudioDevice? _headphones;
+    private readonly MMDeviceEnumerator _enumerator = new();
+
+    private MMDevice? _speakers;
+    private MMDevice? _headphones;
 
     private readonly Icon _speakerIcon;
     private readonly Icon _headphoneIcon;
 
     public TrayAppContext()
     {
-        _audio = new CoreAudioController();
-
         _speakerIcon = LoadIcon("speaker.ico");
         _headphoneIcon = LoadIcon("headphones.ico");
 
@@ -75,18 +74,25 @@ public class TrayAppContext : ApplicationContext
 
     private void RefreshDevices()
     {
-        var devices = _audio.GetPlaybackDevices().ToList();
+        var devices = _enumerator
+            .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
+            .ToList();
 
         _speakers = devices.FirstOrDefault(d =>
-            d.FullName.Contains("Speaker", StringComparison.OrdinalIgnoreCase));
+            d.FriendlyName.Contains("Speaker", StringComparison.OrdinalIgnoreCase));
 
         _headphones = devices.FirstOrDefault(d =>
-            d.FullName.Contains("Head", StringComparison.OrdinalIgnoreCase));
+            d.FriendlyName.Contains("Head", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private MMDevice GetDefaultDevice()
+    {
+        return _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
     }
 
     private void ToggleDevice()
     {
-        var current = _audio.DefaultPlaybackDevice;
+        var current = GetDefaultDevice();
 
         if (_speakers == null || _headphones == null)
         {
@@ -94,7 +100,7 @@ public class TrayAppContext : ApplicationContext
             return;
         }
 
-        if (current?.Id == _speakers.Id)
+        if (current.ID == _speakers.ID)
             SetDevice(_headphones);
         else
             SetDevice(_speakers);
@@ -102,39 +108,34 @@ public class TrayAppContext : ApplicationContext
         UpdateUI();
     }
 
-    private void SetDevice(CoreAudioDevice device)
+    private void SetDevice(MMDevice device)
     {
-        device.SetAsDefault();
+        PolicyConfigClient.SetDefaultDevice(device.ID);
 
         _trayIcon.ShowBalloonTip(
             1000,
             "Audio Switch",
-            $"Switched to {device.FullName}",
+            $"Switched to {device.FriendlyName}",
             ToolTipIcon.Info
         );
     }
 
     private void UpdateUI()
     {
-        var current = _audio.DefaultPlaybackDevice;
+        var current = GetDefaultDevice();
 
-        if (current == null)
-            return;
+        if (_headphones != null && current.ID == _headphones.ID)
+            _trayIcon.Icon = _headphoneIcon;
+        else
+            _trayIcon.Icon = _speakerIcon;
 
-        bool isHeadphones =
-            _headphones != null &&
-            current.Id == _headphones.Id;
-
-        _trayIcon.Icon = isHeadphones ? _headphoneIcon : _speakerIcon;
-
-        _trayIcon.Text = $"Audio: {current.FullName}";
+        _trayIcon.Text = $"Audio: {current.FriendlyName}";
     }
 
     protected override void ExitThreadCore()
     {
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
-        _audio.Dispose();
 
         _speakerIcon.Dispose();
         _headphoneIcon.Dispose();
