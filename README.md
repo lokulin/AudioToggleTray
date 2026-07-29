@@ -205,6 +205,11 @@ dotnet build
 * No administrator privileges required
 * Runs safely in background
 * Very low resource usage
+* To trigger a release, tag a commit and push the tag:
+   ```
+   git tag v1.0.0
+   git push origin v1.0.0
+  ```
 
 ---
 
