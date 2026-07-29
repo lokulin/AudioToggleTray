@@ -109,8 +109,9 @@ public class TrayAppContext : ApplicationContext
 
     private Icon LoadIcon(string file)
     {
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", file);
-        return new Icon(path);
+        using var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(file)
+            ?? throw new FileNotFoundException($"Embedded resource '{file}' not found.");
+        return new Icon(stream);
     }
 
     private ContextMenuStrip BuildMenu()

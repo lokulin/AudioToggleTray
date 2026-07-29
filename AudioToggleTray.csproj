@@ -13,13 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\speaker.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Assets\speaker.ico">
+      <LogicalName>speaker.ico</LogicalName>
+    </EmbeddedResource>
 
-    <Content Include="Assets\headphones.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Assets\headphones.ico">
+      <LogicalName>headphones.ico</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 
