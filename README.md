@@ -1,218 +1,68 @@
 # AudioToggleTray
 
-A lightweight Windows system tray application that toggles between two audio output devices (for example speakers and headphones) with a single click.
+A tiny Windows system tray utility that instantly switches your default audio
+output device (e.g. speakers &harr; headphones) with one click or a global
+hotkey.
 
-Built with .NET 8 WinForms and AudioSwitcher.CoreAudio.
+## Features
 
----
+- Lives quietly in the system tray — left-click the icon, or press **Ctrl+F12**,
+  to switch between your two chosen audio devices.
+- Icon changes to reflect which device is currently active.
+- Pick exactly which two devices to toggle between from the tray menu
+  (**Primary Device** / **Secondary Device**).
+- Automatically notices when devices are plugged in, unplugged, or changed.
+- Optional **Start with Windows**.
+- Remembers your device choices between launches.
 
-# Features
+## Download & Install
 
-* Single-click toggle between two audio output devices
-* System tray icon reflects current audio mode
-* Tooltip shows active device name
-* Balloon notification when switching devices
-* Right-click tray menu (Toggle / Refresh / Exit)
-* Uses `.ico` files for stable Windows tray icons
-* Minimal CPU and memory usage
+1. Download the latest `AudioToggleTray-<version>-win-x64.zip` from the
+   [Releases](../../releases) page.
+2. **Right-click the downloaded zip → Properties → check "Unblock" → OK.**
+   This step matters: Windows marks anything downloaded from the internet, and
+   without unblocking it first you may see extraction or launch issues.
+3. Extract the zip anywhere you like (e.g. `C:\Tools\AudioToggleTray`).
+4. Run `AudioToggleTray.exe`.
 
----
+The first time you run it, Windows SmartScreen will likely show a
+"Windows protected your PC" warning, since this is an unsigned, independently
+published app. Click **More info → Run anyway** to continue. This is normal
+and only happens until the app builds up download reputation with Microsoft.
 
-# Requirements
+### Requirements
 
-* Windows 10 or Windows 11
-* .NET 8 SDK
-  [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+This build is **framework-dependent**, meaning it needs the
+[.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+installed on your machine. If it isn't installed, Windows will show a prompt
+with a direct download link the first time you try to run the app.
 
----
+## Usage
 
-# Setup
+- **Left-click** the tray icon, or press **Ctrl+F12**, to toggle between your
+  two chosen devices.
+- **Right-click** the tray icon for the full menu:
+  - **Toggle Audio** — same as left-click.
+  - **Primary Device / Secondary Device** — choose which two devices to
+    switch between.
+  - **Refresh Devices** — manually re-scan available audio devices.
+  - **Start with Windows** — launch automatically at sign-in.
+  - **Exit**
 
-## Create project
+If something isn't switching correctly, check `%AppData%\AudioToggleTray\crash.log`
+for details — the app logs errors there instead of failing silently.
 
-```bash
-dotnet new winforms -n AudioToggleTray
-cd AudioToggleTray
+## Building from source
+
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+```
+dotnet publish AudioToggleTray.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
 ```
 
----
+The published output is a single `AudioToggleTray.exe` — no other files
+needed.
 
-## Install dependency
+## License
 
-```bash
-dotnet add package AudioSwitcher.AudioApi.CoreAudio
-```
-
----
-
-## Add icons
-
-Create this folder structure:
-
-AudioToggleTray/
-Assets/
-speaker.ico
-headphones.ico
-
-Icon requirements:
-
-* Must be `.ico` format
-* Should include multiple sizes (16x16, 32x32, 48x48, 256x256 recommended)
-
----
-
-## Update project file (.csproj)
-
-Replace with:
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\speaker.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-
-    <Content Include="Assets\headphones.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-</Project>
-```
-
----
-
-# Build
-
-## Debug build
-
-dotnet build
-
----
-
-## Release build
-
-dotnet build -c Release
-
----
-
-# Run
-
-dotnet run
-
-Or run directly from output:
-
-bin\Debug\net8.0-windows\AudioToggleTray.exe
-
----
-
-# Publish (recommended)
-
-Creates a standalone executable:
-
-dotnet publish -c Release -r win-x64 --self-contained true
-
-Output folder:
-
-bin\Release\net8.0-windows\win-x64\publish\
-
----
-
-# Add to Windows startup
-
-## Method 1: Startup folder
-
-1. Press Win + R
-2. Enter:
-
-shell:startup
-
-3. Create shortcut to:
-
-AudioToggleTray.exe
-
----
-
-## Method 2: Task Scheduler
-
-* Open Task Scheduler
-* Create Task
-* Trigger: At log on
-* Action: Start program → path to exe
-* Optional: run with highest privileges
-
----
-
-# Usage
-
-* Left-click tray icon → toggle audio device
-* Right-click tray icon → menu options
-* Hover tray icon → shows current device
-* Balloon notification confirms switching
-
----
-
-# Device detection
-
-The app detects devices using simple name matching:
-
-Speakers:
-
-* "Speaker"
-* "Realtek"
-
-Headphones:
-
-* "Head"
-* "Headset"
-* "USB"
-
-If detection fails, adjust logic in RefreshDevices().
-
----
-
-# Troubleshooting
-
-## Audio does not switch
-
-* Ensure both devices exist in Windows Sound settings
-* Adjust device name matching rules
-
-## Icons not showing
-
-* Ensure .ico files are valid
-* Ensure they are copied to output directory
-
-## Build issues
-
-dotnet clean
-dotnet restore
-dotnet build
-
----
-
-# Notes
-
-* Uses Windows Core Audio via AudioSwitcher library
-* No administrator privileges required
-* Runs safely in background
-* Very low resource usage
-* To trigger a release, tag a commit and push the tag:
-   ```
-   git tag v1.0.0
-   git push origin v1.0.0
-  ```
-
----
-
-# License
-
-## Personal / internal use
+Add your preferred license here (e.g. MIT).

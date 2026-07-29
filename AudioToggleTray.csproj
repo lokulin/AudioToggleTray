@@ -6,6 +6,20 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\speaker.ico</ApplicationIcon>
+
+    <!-- Shown in Explorer's Properties > Details tab -->
+    <AssemblyTitle>AudioToggleTray</AssemblyTitle>
+    <Product>AudioToggleTray</Product>
+    <Company>Terra Eclectic</Company>
+    <Description>Toggle the Windows default audio output device from the system tray.</Description>
+    <Copyright>Copyright (c) 2026 Terra Eclectic</Copyright>
+    <Version>1.3.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
+
+    <!-- Embed debug symbols into the exe instead of emitting a separate .pdb file -->
+    <DebugType Condition="'$(Configuration)'=='Release'">embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
