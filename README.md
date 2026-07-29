@@ -211,5 +211,3 @@ dotnet build
 # License
 
 ## Personal / internal use
-
-If you still want, I can next turn this into a **ready-to-run GitHub repository layout or a zip-ready template project** so there is zero setup friction.
