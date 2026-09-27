@@ -45,3 +45,7 @@ jobs:
         with:
           files: AudioToggleTray-*.zip
           generate_release_notes: true
+
+      - name: Notify Death.FM Players site to rebuild
+        continue-on-error: true # don't fail the release if the deploy hook secret isn't set up yet
+        run: curl -X POST "${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}"
